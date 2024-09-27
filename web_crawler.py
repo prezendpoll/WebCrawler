@@ -10,6 +10,7 @@ import random
 import json
 import logging
 import os
+from collections import defaultdict
 
 # Initialize logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -23,7 +24,9 @@ summarizer = pipeline("summarization")
 USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Safari/605.1.15",
-    "Mozilla/5.0 (Linux; Android 10; Pixel 3 XL Build/QP1A.190711.020) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Mobile Safari/537.36"
+    "Mozilla/5.0 (Linux; Android 10; Pixel 3 XL Build/QP1A.190711.020) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Mobile Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Gecko/20100101 Firefox/89.0",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36",
 ]
 
 # Configuration parameters
@@ -67,7 +70,7 @@ def extract_info(domain, depth=0):
     soup = BeautifulSoup(page_content, 'html.parser')
     title = soup.title.string if soup.title else 'No Title'
     
-    links_data = {}
+    links_data = defaultdict(dict)
     for a in soup.find_all('a', href=True):
         link = a['href']
         if link.startswith('/') or domain in link:
@@ -165,6 +168,18 @@ def run_crawler():
     crawler_thread.start()
     crawler_thread.join()
 
+# Function to provide a summary of the crawled data
+def summarize_data(data):
+    total_domains = len(data)
+    total_links = sum(len(entry['links']) for entry in data)
+    logger.info(f"Total domains crawled: {total_domains}")
+    logger.info(f"Total internal links found: {total_links}")
+
+# Function to handle configuration and run the crawler
+def main():
+    logger.info("Starting web crawler...")
+    run_crawler()
+
 # Start the crawler
 if __name__ == '__main__':
-    run_crawler()
+    main()
